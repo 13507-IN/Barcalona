@@ -1,0 +1,38 @@
+﻿QUICK START - FC Barcelona Dashboard
+===================================
+
+STEP 1: Install dependencies
+----------------------------
+Run this in PowerShell from the project root:
+
+    pip install -r backend/requirements.txt
+
+
+STEP 2: Start the backend server
+--------------------------------
+
+    python backend/app.py
+
+You should see:
+    "Starting Flask server on http://localhost:5000"
+
+
+STEP 3: Open the dashboard
+--------------------------
+Open your browser and go to:
+
+    http://localhost:5000
+
+Or open this file directly:
+
+    frontend/index.html
+
+
+API ENDPOINTS
+-------------
+/api/club      -> Club information
+/api/squad     -> Squad players
+/api/news      -> Latest news
+/api/matches   -> Matches (upcoming & recent)
+/api/trophies  -> Trophy history
+/api/all       -> All data

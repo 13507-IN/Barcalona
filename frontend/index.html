@@ -1,0 +1,183 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FC Barcelona Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Navigation Header -->
+    <header class="navbar">
+        <div class="navbar-container">
+            <div class="navbar-brand">
+                <h1>🔵 FC Barcelona</h1>
+                <p class="subtitle">The Official Dashboard</p>
+            </div>
+            <nav class="navbar-menu">
+                <a href="#club" class="nav-link">Club</a>
+                <a href="#squad" class="nav-link">Squad</a>
+                <a href="#matches" class="nav-link">Matches</a>
+                <a href="#trophies" class="nav-link">Trophies</a>
+                <a href="#news" class="nav-link">News</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="container">
+
+        <!-- ============ Club Information Section ============ -->
+        <section id="club" class="section">
+            <h2 class="section-title">🏟️ Club Overview</h2>
+            
+            <div class="loading-spinner" id="clubLoading">
+                <div class="spinner"></div>
+                <p>Loading club information...</p>
+            </div>
+
+            <div id="clubContent" class="club-grid">
+                <!-- Club info will be loaded here by JavaScript -->
+                <div class="club-info-card">
+                    <div class="info-item">
+                        <label>Club Name</label>
+                        <p id="clubName">-</p>
+                    </div>
+                    <div class="info-item">
+                        <label>Founded</label>
+                        <p id="clubFounded">-</p>
+                    </div>
+                    <div class="info-item">
+                        <label>Stadium</label>
+                        <p id="clubStadium">-</p>
+                    </div>
+                    <div class="info-item">
+                        <label>Capacity</label>
+                        <p id="clubCapacity">-</p>
+                    </div>
+                    <div class="info-item">
+                        <label>Manager</label>
+                        <p id="clubManager">-</p>
+                    </div>
+                    <div class="info-item">
+                        <label>Colors</label>
+                        <p id="clubColors">-</p>
+                    </div>
+                    <div class="info-item">
+                        <label>City</label>
+                        <p id="clubCity">-</p>
+                    </div>
+                    <div class="info-item">
+                        <label>Nickname</label>
+                        <p id="clubNickname">-</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============ Squad Section ============ -->
+        <section id="squad" class="section">
+            <h2 class="section-title">⚽ Squad Players</h2>
+            
+            <div class="loading-spinner" id="squadLoading">
+                <div class="spinner"></div>
+                <p>Loading squad information...</p>
+            </div>
+
+            <div id="squadContent" class="players-grid">
+                <!-- Player cards will be loaded here by JavaScript -->
+            </div>
+        </section>
+
+        <!-- ============ Upcoming Matches Section ============ -->
+        <section id="matches" class="section">
+            <h2 class="section-title">📅 Matches</h2>
+            
+            <!-- Upcoming Matches -->
+            <h3 class="subsection-title">Upcoming Matches</h3>
+            
+            <div class="loading-spinner" id="matchesLoading">
+                <div class="spinner"></div>
+                <p>Loading matches...</p>
+            </div>
+
+            <div id="upcomingContent" class="matches-table-wrapper">
+                <table class="matches-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Opponent</th>
+                            <th>Competition</th>
+                            <th>Venue</th>
+                        </tr>
+                    </thead>
+                    <tbody id="upcomingMatches">
+                        <!-- Upcoming matches will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Recent Results -->
+            <h3 class="subsection-title" style="margin-top: 2rem;">Recent Results</h3>
+            
+            <div id="recentContent" class="matches-table-wrapper">
+                <table class="matches-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Opponent</th>
+                            <th>Result</th>
+                            <th>Competition</th>
+                            <th>Venue</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recentMatches">
+                        <!-- Recent matches will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ============ Trophies Section ============ -->
+        <section id="trophies" class="section">
+            <h2 class="section-title">🏆 Trophy Cabinet</h2>
+            
+            <div class="loading-spinner" id="trophiesLoading">
+                <div class="spinner"></div>
+                <p>Loading trophies...</p>
+            </div>
+
+            <div id="trophiesContent" class="trophies-grid">
+                <!-- Trophy cards will be loaded here by JavaScript -->
+            </div>
+        </section>
+
+        <!-- ============ News Section ============ -->
+        <section id="news" class="section">
+            <h2 class="section-title">📰 Latest News</h2>
+            
+            <div class="loading-spinner" id="newsLoading">
+                <div class="spinner"></div>
+                <p>Loading news...</p>
+            </div>
+
+            <div id="newsContent" class="news-grid">
+                <!-- News cards will be loaded here by JavaScript -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <p>&copy; 2026 FC Barcelona Dashboard - Web Scraping Application</p>
+            <p class="footer-subtitle">Data updated every 30 minutes | Built with Flask, BeautifulSoup & JavaScript</p>
+        </div>
+    </footer>
+
+    <!-- Load JavaScript -->
+    <script src="script.js"></script>
+</body>
+</html>
+
