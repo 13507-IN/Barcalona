@@ -15,6 +15,7 @@ import unicodedata
 from datetime import datetime, timedelta
 from email.utils import parsedate_to_datetime
 from typing import Dict, List, Optional, Tuple
+from urllib.parse import quote
 
 import requests
 from bs4 import BeautifulSoup
@@ -40,6 +41,8 @@ RESULTS_URL = "https://www.fcbarcelona.com/en/football/first-team/results"
 
 FCBARCA_NEWS_URL = "https://www.fcbarcelona.com/en/football/first-team/"
 GUARDIAN_RSS_URL = "https://www.theguardian.com/football/barcelona/rss"
+
+WIKI_SUMMARY_URL = "https://en.wikipedia.org/api/rest_v1/page/summary/{}"
 
 # Log level can be overridden with SCRAPER_LOG_LEVEL=DEBUG
 LOG_LEVEL = os.getenv("SCRAPER_LOG_LEVEL", "INFO").upper()
@@ -210,6 +213,39 @@ def fetch_text(url: str, label: str) -> Optional[str]:
         logger.warning("FETCH FAIL %s time=%.2fs error=%s", label, elapsed, exc)
         return None
 
+def fetch_json(url: str, label: str) -> Optional[Dict]:
+    logger.info("FETCH %s -> %s", label, url)
+    start = time.perf_counter()
+    try:
+        response = requests.get(url, headers=HEADERS, timeout=TIMEOUT)
+        elapsed = time.perf_counter() - start
+        logger.info("FETCH OK %s status=%s time=%.2fs", label, response.status_code, elapsed)
+        response.raise_for_status()
+        return response.json()
+    except Exception as exc:
+        elapsed = time.perf_counter() - start
+        logger.warning("FETCH FAIL %s time=%.2fs error=%s", label, elapsed, exc)
+        return None
+
+_player_image_cache: Dict[str, str] = {}
+
+def get_player_image(wiki_title: str) -> str:
+    if not wiki_title:
+        return ""
+    if wiki_title in _player_image_cache:
+        return _player_image_cache[wiki_title]
+
+    url = WIKI_SUMMARY_URL.format(quote(wiki_title))
+    data = fetch_json(url, f"Wikipedia summary ({wiki_title})") or {}
+
+    thumb = ""
+    if isinstance(data, dict):
+        thumb = (data.get("thumbnail") or {}).get("source") or ""
+        if not thumb:
+            thumb = (data.get("originalimage") or {}).get("source") or ""
+
+    _player_image_cache[wiki_title] = thumb
+    return thumb
 
 def parse_month_year(line: str) -> Optional[Tuple[int, int]]:
     """Parse lines like 'March 2026' or 'Mar 2026'."""
@@ -480,7 +516,15 @@ def scrape_squad() -> List[Dict]:
         logger.warning("SQUAD table empty, using demo data")
         return DEFAULT_SQUAD.copy()
 
-    headers = [clean_text(cell.get_text(" ", strip=True)).lower() for cell in rows[0].find_all(["th", "td"])]
+    headers = []
+    header_row_index = None
+    for i, row in enumerate(rows[:3]):
+        header_cells = row.find_all("th")
+        header_text = [clean_text(h.get_text(" ", strip=True)).lower() for h in header_cells]
+        if header_text and any("player" in h for h in header_text):
+            headers = header_text
+            header_row_index = i
+            break
 
     def header_index(candidates: List[str]) -> Optional[int]:
         for idx, h in enumerate(headers):
@@ -494,12 +538,46 @@ def scrape_squad() -> List[Dict]:
     idx_player = header_index(["player", "name"])
     idx_nat = header_index(["nation", "nat", "nationality"])
 
-    players: List[Dict] = []
+    def extract_nationality(cell: Optional[BeautifulSoup]) -> str:
+        if not cell:
+            return ""
+        img = cell.find("img")
+        if img and img.get("alt"):
+            return clean_text(img["alt"])
+        link = cell.find("a", title=True)
+        if link and link.get("title"):
+            return clean_text(link["title"])
+        return clean_text(cell.get_text(" ", strip=True))
 
-    for row in rows[1:]:
+    def extract_player_link(row: BeautifulSoup) -> Optional[BeautifulSoup]:
+        for link in row.find_all("a", href=True):
+            href = link.get("href", "")
+            if not href.startswith("/wiki/"):
+                continue
+            if ":" in href:
+                continue
+            return link
+        return None
+
+    players: List[Dict] = []
+    seen = set()
+
+    start_row = header_row_index + 1 if header_row_index is not None else 1
+    for row in rows[start_row:]:
         cells = row.find_all(["th", "td"])
-        if not cells or len(cells) < 3:
+        if not cells:
             continue
+
+        link = extract_player_link(row)
+        if not link:
+            continue
+
+        player_name = clean_text(link.get_text(" ", strip=True))
+        player_title = link.get("title") or player_name
+
+        if not player_name or player_name.lower() in seen:
+            continue
+        seen.add(player_name.lower())
 
         def cell_text(index: Optional[int]) -> str:
             if index is None or index >= len(cells):
@@ -507,22 +585,34 @@ def scrape_squad() -> List[Dict]:
             return clean_text(cells[index].get_text(" ", strip=True))
 
         number_text = cell_text(idx_no)
-        player_name = cell_text(idx_player)
         position = cell_text(idx_pos)
-        nationality = cell_text(idx_nat)
 
-        if not player_name:
-            continue
+        # Fallbacks if header mapping failed
+        if not number_text:
+            for cell in cells:
+                t = clean_text(cell.get_text(" ", strip=True))
+                if t.isdigit() and len(t) <= 2:
+                    number_text = t
+                    break
+
+        if not position:
+            for cell in cells:
+                t = clean_text(cell.get_text(" ", strip=True))
+                if t in ["GK", "DF", "MF", "FW"]:
+                    position = t
+                    break
+
+        nationality = extract_nationality(cells[idx_nat]) if idx_nat is not None else ""
+
+        photo = get_player_image(player_title)
 
         players.append({
             "name": player_name,
             "position": position or "Unknown",
-            "number": safe_int(number_text) or None,
-            "nationality": nationality or "Unknown"
+            "number": safe_int(number_text),
+            "nationality": nationality or "Unknown",
+            "photo": photo
         })
-
-        if len(players) >= 30:
-            break
 
     if len(players) < 11:
         logger.warning("SQUAD parsed %d players (<11), using demo data", len(players))
