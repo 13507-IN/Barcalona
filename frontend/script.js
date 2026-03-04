@@ -4,7 +4,7 @@
  */
 
 // ====== Configuration ======
-const API_BASE = 'http://localhost:5000/api';
+const API_BASE = 'https://barcalona.onrender.com/api'; // Base URL for API endpoints
 const CACHE_TIME = 300000; // 5 minutes cache (in milliseconds)
 
 // Global state
