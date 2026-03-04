@@ -93,13 +93,10 @@ def get_matches():
     """API endpoint: Return upcoming matches and recent results."""
     try:
         data = get_cached_data()
-        return jsonify({
-            "success": True,
-            "upcoming": data["matches"]["upcoming"],
-            "recent": data["matches"]["recent"]
-        }), 200
+        return jsonify({"success": True, "data": data["matches"]}), 200
     except Exception as exc:
         return jsonify({"success": False, "error": str(exc)}), 500
+
 
 
 @app.route("/api/trophies", methods=["GET"])

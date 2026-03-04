@@ -47,15 +47,27 @@ async function fetchData(endpoint) {
         const result = await response.json();
 
         if (result.success) {
-            // Cache the data
-            dataCache[endpoint] = result.data;
-            dataCache.lastFetch[endpoint] = now;
-            
-            console.log(`Loaded ${endpoint} data successfully`);
-            return result.data;
-        } else {
-            throw new Error(result.error || 'Unknown error');
+        // Normalize payload for matches endpoint
+        let payload = result.data;
+
+        if (!payload && endpoint === 'matches') {
+            payload = {
+            upcoming: result.upcoming || [],
+            recent: result.recent || []
+          };
         }
+
+        if (!payload) throw new Error(result.error || 'Unknown error');
+
+        // Cache the data
+        dataCache[endpoint] = payload;
+        dataCache.lastFetch[endpoint] = now;
+
+        console.log(`Loaded ${endpoint} data successfully`);
+        return payload;
+    } else {
+    throw new Error(result.error || 'Unknown error');
+    }
 
     } catch (error) {
         console.error(`Error fetching ${endpoint}:`, error);
